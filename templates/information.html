@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>心脏预警平台</title>
+    <meta name="theme-color" content="#ffc91d"/>
+    <link rel="icon" href="static/img/32.png" sizes="32x32"/>
+    <link rel="icon" href="static/img/192.png" sizes="192x192"/>
+    <link href="static/kico.css" rel="stylesheet" type="text/css"/>
+    <link href="static/paul.css" rel="stylesheet" type="text/css"/>
+    <link href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css"/>
+    <meta name="viewport" content="width=device-width, maximum-scale=1, initial-scale=1"/>
+        <link href="//unpkg.com/layui@2.9.14/dist/css/layui.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles/common.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}">
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/1.css') }}">
+      <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <link href="//unpkg.com/layui@2.9.13/dist/css/layui.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.2.2/dist/echarts.min.js"></script>
+    <script src="{{ url_for('static', filename='js/Socket.IO.min.js') }}"></script>
+</head>
+   <style>
+        .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+            margin-right: auto;
+
+        }
+    </style>
+<body>
+<div class="container">
+
+      <div class="layui-fluid">
+            <div class="layui-row layui-col-space15">
+
+                <div class="layui-col-sm12 layui-col-md6">
+                    <div class="layui-card" style="width: 1200px; height: 450px border-radius: 60px ;">
+
+                        <div class="layui-card-body" style="min-height: 280px;">
+                             <blockquote class="layui-elem-quote">
+                              <h2 class="title">检测结果： <span id="resultDisplay"></span></h2>
+
+                            </blockquote>
+                            <div id="main3" style="width: 1200px; height: 450px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+   </div>
+
+   <div class="layui-fluid">
+            <div class="layui-row layui-col-space15">
+
+                <div class="layui-col-sm12 layui-col-md6">
+                    <div class="layui-card" style="width: 1200px; height: 450px border-radius: 60px ;">
+
+                        <div class="layui-card-body" style="min-height: 280px;">
+                             <blockquote class="layui-elem-quote">
+                               <h2 class="title">个人资料</h2>
+                            </blockquote>
+                            <div class="wrap" >
+
+                            <div class="row">
+                                <div class="col-l-4">
+                                    <p>姓名：小明</p>
+                                    <p>性别：男</p>
+                                    <p>年龄：17</p>
+                                    <p>英文名：Paul</p>
+                                    <p>学历：大专（高技）</p>
+
+                                </div>
+                                <div class="col-l-4">
+                                    <p>QQ：1204958596</p>
+                                    <p>联系方式：<a href="https://paugram.com">15623677525</a></p>
+                                    <p>邮箱：<a href="mailto:dreamer_paul@126.com">dreamer_paul@126.com</a></p>
+                                </div>
+
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+   </div>
+</div>
+
+
+ <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/0.1.0-beta.5/libs/cn/index.js"></script>
+      <script>
+          new CozeWebSDK.WebChatClient({
+            config: {
+              bot_id: '7403289775924494370',
+            },
+            componentProps: {
+              title: 'Coze',
+            },
+          });
+      </script>
+
+
+  <script>
+// 初始化 echarts 图表
+let myChart = echarts.init(document.getElementById('main3'));
+
+// 建立WebSocket连接
+let socket = io.connect('http://127.0.0.1:5000');  // 根据你的实际地址修改
+
+socket.on('connect', function () {
+    console.log('Connected to server');
+});
+
+// 监听从服务器端发送过来的新数据
+socket.on('new_data', function (data) {
+   console.log('Connected to server',data);
+    updateChart(data);
+});
+
+function updateChart(data) {
+    let option = myChart.getOption();
+
+    let currentTime = new Date().getTime();
+    console.log('Connected to server',currentTime);
+    let nextTime = currentTime + 0.1;
+
+    let newData = {
+        name:  nextTime,
+        value: [nextTime, data.value]
+    };
+
+    option.series[0].data.push(newData);
+
+    // 动态更新图表
+    myChart.setOption(option);
+}
+
+// echarts 初始配置项（保持不变）
+let option = {
+    title: {
+        text: '心电图'
+    },
+    tooltip: {
+        trigger: 'axis',
+        formatter: function (params) {
+            let date = new Date(params[0].value[0]);
+            return '该点数据为：' + date.toLocaleTimeString() + ' ' + params[0].value[1].toFixed(2);
+        },
+        axisPointer: {
+            animation: false
+        }
+    },
+    xAxis: {
+        type: 'time',
+        splitLine: {
+            show: false
+        }
+    },
+    yAxis: {
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        splitLine: {
+            show: false
+        }
+    },
+    series: [
+        {
+            name: 'Real-time Data',
+            type: 'line',
+            smooth: false,
+            showSymbol: false,
+            data: []  // 初始为空，将通过从服务器接收的数据填充
+        }
+    ]
+};
+
+// 使用刚指定的配置项和数据显示图表。
+myChart.setOption(option);
+
+
+
+  </script>
+
+<script src="static/kico.js"></script>
+<script src="static/paul.js"></script>
+<script>
+fetch('/result2')
+    .then(response => response.json())
+    .then(data => {
+        var resultDisplay = document.getElementById('resultDisplay');
+        if (data.result === 0) {
+            resultDisplay.innerHTML = '<span style="color: red;">心梗</span>';
+        } else if (data.result === 1) {
+            resultDisplay.innerHTML = '<span style="color: green;">正常</span><p>';
+
+        } else {
+            resultDisplay.innerHTML = '<span>正在处理结果，请稍等</span>';
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+    });
+     setInterval(updateResult, 5000); // 5000 毫秒 = 5 秒
+</script>
+</body>
+</html>

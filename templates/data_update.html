@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Line Chart</title>
+  <!-- 引入 ECharts 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.2.2/dist/echarts.min.js"></script>
+</head>
+<body>
+  <!-- 使用一个 div 元素作为图表容器 -->
+  <div id="main" style="width: 600px; height: 400px;"></div>
+
+  <script>
+    // 基于准备好的dom，初始化echarts实例
+    let myChart = echarts.init(document.getElementById('main'));
+
+    // 初始化数据
+    let initialData = {{ initial_data | safe }};
+    let data = initialData;
+
+    function fetchNewData() {
+      fetch('/data')
+        .then(response => response.json())
+        .then(newData => {
+          data.push(newData);
+          if (data.length > 1000) {
+            data.shift();
+          }
+          updateChart();
+        });
+    }
+
+    function updateChart() {
+      myChart.setOption({
+        series: [{
+          data: data.map(item => item.value)
+        }]
+      });
+    }
+
+    // 设置图表选项
+    let option = {
+      title: {
+        text: 'Dynamic Data & Time Axis'
+      },
+      tooltip: {
+        trigger: 'axis',
+        formatter: function (params) {
+          params = params[0];
+          var date = new Date(params.name);
+          return (
+            date.getDate() +
+            '/' +
+            (date.getMonth() + 1) +
+            '/' +
+            date.getFullYear() +
+            ' : ' +
+            params.value[1]
+          );
+        },
+        axisPointer: {
+          animation: false
+        }
+      },
+      xAxis: {
+        type: 'time',
+        splitLine: {
+          show: false
+        }
+      },
+      yAxis: {
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        splitLine: {
+          show: false
+        }
+      },
+      series: [
+        {
+          name: 'Fake Data',
+          type: 'line',
+          showSymbol: false,
+          data: data.map(item => item.value)
+        }
+      ]
+    };
+
+    // 使用刚指定的配置项和数据显示图表。
+    myChart.setOption(option);
+
+    // 设置定时器，每秒钟请求一次新数据
+    setInterval(fetchNewData, 1000);
+  </script>
+</body>
+</html>

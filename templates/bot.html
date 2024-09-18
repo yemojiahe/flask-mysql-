@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/bot.css') }}">
+<title>心脏预警平台</title>
+<style>
+  body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    width: 100%;
+  }
+
+  .chat-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chat-messages {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+    background-color: #f3f3f3;
+  }
+
+  .message {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    max-width: 70%;
+    word-wrap: break-word;
+  }
+
+  .bot-message {
+    background-color: #6c757d;
+    align-self: flex-start;
+  }
+
+  .user-message {
+    background-color: #007bff;
+    align-self: flex-end;
+  }
+
+  .chat-input {
+    display: flex;
+    padding: 10px;
+    background-color: #fff;
+    border-top: 1px solid #ccc;
+  }
+
+  .chat-input input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+
+  .chat-input button {
+    padding: 10px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+  }
+
+  .chat-input button:hover {
+    background-color: #0056b3;
+  }
+</style>
+  <style>
+  .file-label {
+    padding: 10px;
+    margin-left: 10px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    display: inline-block;
+    text-align: center; /* 居中文本 */
+    line-height: 1.5; /* 垂直居中 */
+    width: 40px; /* 控制按钮宽度 */
+  }
+
+  .file-label:hover {
+    background-color: #0056b3;
+  }
+
+  .file-label i {
+    margin-right: 5px;
+  }
+
+  /* 隐藏文件输入框的默认样式 */
+  #file-input {
+    display: none;
+  }
+</style>
+
+</head>
+<body>
+  <div id="sonHiddenIcon" class="son_icon son_icon_hideen" onclick="btn_display_icon()"></div>
+    <div class="left_layout" id="left_layout_id">
+      <!-- 左侧布局内容 -->
+      <div class="father_icon">
+        <div id="sonIcon" class="son_icon son_icon_display" onclick="btn_icon()"></div>
+
+<!--        </div>-->
+        <div class="new_chat">新建聊天</div>
+        <div class="new_chat new_chat_text">
+           <img src="static/images/b.png" alt="Michael Jackson" style="width: 50px; height: 50px; border-radius: 50%;">
+          <div style="flex:8;color:green;">欢迎使用心脏预警平台</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="right_layout">
+
+
+<div id="chat-messages" class="chat-messages"></div>
+<div class="chat-input">
+  <input type="text" id="chat-input" placeholder="Type a message...">
+  <label for="file-input" class="file-label">
+    <i class="far fa-file-image" onclick="sendImage()">图片</i>
+  </label>
+  <input type="file" id="file-input" accept="image/*" style="display: none;">
+  <button onclick="sendMessage()">发送</button>
+</div>
+
+
+
+
+
+<script>
+   function sendMessage() {
+    var input = document.getElementById('chat-input');
+    var message = input.value.trim();
+    if (message !== '') {
+      displayMessage(message, 'user-message');
+      // 这里可以添加发送消息到服务器的代码
+       // 发送消息给后端
+      fetch('/send_msg', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: message }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        // 显示服务器响应的消息
+
+        var json_data = JSON.parse(data);
+        console.log('Content from JSON:', json_data);
+        displayMessage(json_data.content, 'bot-message');
+      })
+      .catch(error => {
+        console.error('Error sending message:', error);
+      });
+      input.value = '';
+    }
+  }
+
+
+
+
+
+  function displayMessage(message, className) {
+    var chatMessages = document.getElementById('chat-messages');
+    var newMessage = document.createElement('div');
+    newMessage.textContent = message;
+    newMessage.classList.add('message', className);
+    chatMessages.appendChild(newMessage);
+    // 自动滚动到最新的消息
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  // 添加一些示例消息
+  displayMessage('你好', 'bot-message');
+  displayMessage('你是谁', 'user-message');
+  displayMessage('我是你的心脏智能检测助手', 'bot-message');
+
+
+  function sendImage() {
+  var fileInput = document.getElementById('file-input');
+  fileInput.click();
+
+  fileInput.addEventListener('change', function() {
+    var file = fileInput.files[0];
+    console.log('Content :', 1);
+    if (file) {
+      var formData = new FormData();
+      formData.append('image', file); // 'image'是服务器接受图片的字段名
+
+      // 可选的：显示用户选择了哪个文件
+      displayMessage('图片: ' + file.name + '已经上传', 'user-message');
+      // 发送图片数据到服务器
+      fetch('/upload_image', {
+        method: 'POST',
+        body: formData,
+      })
+      .then(response => response.json())
+      .then(data => {
+        // 服务器处理完成后显示图片和消息
+        var json_data = JSON.parse(data);
+        console.log('Content from JSON:', json_data);
+        displayMessage(json_data.message.content, 'bot-message'); // 服务器返回的消息
+      })
+      .catch(error => {
+        console.error('Error uploading image:', error);
+        displayMessage('Error uploading image', 'user-message');
+      });
+      fileInput.value = '';
+    }
+  });
+}
+</script>
+       <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/0.1.0-beta.5/libs/cn/index.js"></script>
+      <script>
+          new CozeWebSDK.WebChatClient({
+            config: {
+              bot_id: '7403289775924494370',
+            },
+            componentProps: {
+              title: 'Coze',
+            },
+          });
+      </script>
+    </div>
+</body>
+</html>

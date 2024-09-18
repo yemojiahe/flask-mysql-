@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>心脏预警平台</title>
+  <meta name="renderer" content="webkit|ie-comp|ie-stand">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <link href="//unpkg.com/layui@2.9.14/dist/css/layui.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/font.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/xadmin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/inf.css') }}">
+  <script src="{{ url_for('static', filename='lib/layui/layui.js') }}" charset="utf-8"></script>
+  <script src="{{ url_for('static', filename='js/xadmin.js') }}"></script>
+     <script src="{{ url_for('static', filename='js/Socket.IO.min.js') }}"></script>
+
+
+  <script>
+      // 是否开启刷新记忆tab功能
+      // var is_remember = false;
+  </script>
+  <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+    <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+  <link href="//unpkg.com/layui@2.9.13/dist/css/layui.css" rel="stylesheet">
+  <!-- 引入 ECharts 库 -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.2.2/dist/echarts.min.js"></script>
+
+
+</head>
+<body>
+   <div class="layui-fluid">
+            <div class="layui-row layui-col-space15">
+
+                <div class="layui-col-sm12 layui-col-md6">
+                    <div class="layui-card">
+<!--                        <div class="layui-card-header">心脏数据显示</div>-->
+                        <div class="layui-card-body" style="min-height: 280px;">
+
+                             <blockquote class="layui-elem-quote">
+                              <h2 class="title">检测结果： <span id="resultDisplay"></span></h2>
+                            </blockquote>
+                          <div id="main2" style="width: 1200px; height: 450px;"></div>
+                        </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+   </div>
+
+
+           <br>
+            <form action="/upload/" method="post" enctype="multipart/form-data">
+            <div class="map">
+               <div class="charts" style="display: flex; justify-content: center;">
+
+                <div class="chart" style="display: flex; justify-content: center;">
+                     <label for="file-upload" >
+                     <span style="color: white;">选择文件</span>
+                     <input id="file-upload" type="file" name="pic" style="display: none;">
+                     </label>
+                </div>
+                <div class="chart" style="display: flex; justify-content: center;">
+                    <label for="submit-btn" class="button-style">
+                    <span style="color: white;">提交</span>
+                    <button id="submit-btn" type="submit" style="display: none;">提交</button>
+                    </label>
+                </div>
+
+               </div>
+            </div>
+            </form>
+
+
+
+  <!-- 使用一个 div 元素作为图表容器 -->
+
+
+    <script>
+     function clickfile() {
+         document.getElementById('file_input1').click();
+         document.getElementById('file_input2').click();
+    }
+     function changefile(files) {
+         console.log(files);
+    }
+ </script>
+
+<script>
+// 初始化 echarts 图表
+let myChart = echarts.init(document.getElementById('main2'));
+
+// 建立WebSocket连接
+let socket = io.connect('http://127.0.0.1:5000');  // 根据你的实际地址修改
+
+socket.on('connect', function () {
+    console.log('Connected to server');
+});
+
+// 监听从服务器端发送过来的新数据
+socket.on('new_data', function (data) {
+   console.log('Connected to server',data);
+    updateChart(data);
+});
+
+function updateChart(data) {
+    let option = myChart.getOption();
+
+    let currentTime = new Date().getTime();
+    console.log('Connected to server',currentTime);
+    let nextTime = currentTime + 10;
+
+    let newData = {
+        name:  nextTime,
+        value: [nextTime, data.value]
+    };
+
+    option.series[0].data.push(newData);
+
+    // 动态更新图表
+    myChart.setOption(option);
+}
+
+// echarts 初始配置项（保持不变）
+let option = {
+    title: {
+        text: '心电图'
+    },
+    tooltip: {
+        trigger: 'axis',
+        formatter: function (params) {
+            let date = new Date(params[0].value[0]);
+            return '该点数据为：' + date.toLocaleTimeString() + ' ' + params[0].value[1].toFixed(2);
+        },
+        axisPointer: {
+            animation: false
+        }
+    },
+    xAxis: {
+        type: 'time',
+        splitLine: {
+            show: false
+        }
+    },
+    yAxis: {
+        type: 'value',
+        boundaryGap: [0, '100%'],
+        splitLine: {
+            show: false
+        }
+    },
+    series: [
+        {
+            name: 'Real-time Data',
+            type: 'line',
+            smooth: false,
+            showSymbol: false,
+            data: []  // 初始为空，将通过从服务器接收的数据填充
+        }
+    ]
+};
+
+// 使用刚指定的配置项和数据显示图表。
+myChart.setOption(option);
+
+</script>
+
+<script>
+<!--    function showPopup() {-->
+
+
+<!--    fetch('/result')-->
+<!--        .then(response => response.json())-->
+<!--        .then(data => {-->
+
+<!--            if (data.result === 0) {-->
+<!--                alert('检测结果：心梗，您可能有心肌梗死的风险，请保持冷静并立即行动。已将您的诊断信息与联系方式发送至最近的医疗中心，请前往并接受专业治疗。现代医疗技术能够迅速应对此类紧急情况，提供有效的救治方案。请相信医疗团队的专业能力，他们会全力以赴保障您的健康。同时，请保持积极心态，家人的陪伴与支持也是您康复的重要力量。请遵循医嘱，配合治疗，相信您能够战胜病魔，重新拥有健康与活力。');-->
+
+<!--            } else if (data.result === 1) {-->
+<!--                alert('检测结果：正常，经过全面的医学检查与评估，很高兴地通知您，您的身体状况完全正常，无需任何担忧。这意味着您的心脏功能强健，血液循环顺畅，各项生理指标均处于健康范围之内。请继续保持积极的生活方式，均衡饮食，适量运动，充足休息，并定期进行体检，以维护这份来之不易的健康状态。衷心祝愿您继续享受健康、快乐的生活！');-->
+<!--             } else {-->
+<!--                resultDisplay.innerHTML = '<p>正在处理结果，请稍等</p>';-->
+<!--            }-->
+<!--        })-->
+<!--        .catch(error => {-->
+<!--            console.error('Fetch error:', error);-->
+<!--        });-->
+
+<!--    setInterval(updateResult, 5000); // 每5秒钟更新一次结果-->
+
+<!--    return true; // 执行完弹窗后，继续链接的默认行为-->
+<!--}-->
+
+fetch('/result')
+    .then(response => response.json())
+    .then(data => {
+        var resultDisplay = document.getElementById('resultDisplay');
+        if (data.result === 0) {
+            resultDisplay.innerHTML = '<p style="color: red;">检测结果：心梗</p>';
+        } else if (data.result === 1) {
+            resultDisplay.innerHTML = '<p style="color: green;">检测结果：正常</p>';
+        } else {
+            resultDisplay.innerHTML = '<p>正在处理结果，请稍等</p>';
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+    });
+    setInterval(updateResult, 5000); // 5000 毫秒 = 5 秒
+
+</script>
+
+
+
+</body>
+</html>

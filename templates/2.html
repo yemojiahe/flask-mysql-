@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coze Web Chat</title>
+    <script src="https://lf-cdn.coze.cn/obj/unpkg/flow-platform/chat-app-sdk/0.1.0-beta.5/libs/cn/index.js"></script>
+
+</head>
+<body>
+    <div id="chat-container"></div>
+    <script>
+        new CozeWebSDK.WebChatClient({
+            config: {
+                bot_id: '7403289775924494370',
+            },
+            componentProps: {
+                title: 'Coze',
+            },
+        });
+    </script>
+</body>
+</html>

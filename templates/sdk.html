@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <style>
+        /* Customize the position of the floating entry */
+        #position_demo {
+            position: absolute;
+            right: 10px;
+            bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div id="position_demo"></div>
+<script src="https://sf-cdn.coze.com/obj/unpkg-va/flow-platform/chat-app-sdk/{{0.1.0-beta.5}}/libs/oversea/index.js"></script>
+<script>
+    const bot_id = '7392882322007572495';
+
+    const title = 'Translation';
+    const icon = 'https://lf-bot-studio-plugin-resource.coze.cn/obj/bot-studio-platform-plugin-tos/artist/image/7e813aa2c7e14ebb9e2d1a989acfb128.png';
+    const lang = 'zh-CN';
+    const layout = 'pc';
+    const width = 800;
+    new CozeWebSDK.WebChatClient({
+        config: {
+
+            bot_id :'7392882322007572495',
+        },
+        componentProps: {
+            title,
+            icon,
+            width,
+        },
+        el: document.getElementById('position_demo')
+    });
+</script>
+</body>
+</html>
